@@ -1,0 +1,260 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+// datasource URL is now in prisma.config.ts
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth / Users ──────────────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(PARENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   Student? @relation(fields: [studentId], references: [id])
+  studentId String?  @unique
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  PARENT
+  STUDENT
+}
+
+// ─── Academic ──────────────────────────────────────────────────────────────────
+model Class {
+  id       String    @id @default(cuid())
+  name     String    @unique // "Play", "Nursery", "KG", "1", ... "8"
+  section  String?
+  students Student[]
+  subjects Subject[]
+
+  @@map("classes")
+}
+
+model Student {
+  id            String   @id @default(cuid())
+  admissionNo   String   @unique
+  name          String
+  fatherName    String
+  motherName    String
+  dob           DateTime
+  gender        Gender
+  phone         String
+  address       String
+  photo         String?
+  bloodGroup    String?
+  aadhaarNo     String?
+  session       String   // "2024-25"
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  classId String
+  class   Class  @relation(fields: [classId], references: [id])
+
+  results Result[]
+  fees    Fee[]
+  user    User?
+
+  @@map("students")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Subject {
+  id       String   @id @default(cuid())
+  name     String
+  code     String
+  classId  String
+  class    Class    @relation(fields: [classId], references: [id])
+  results  Result[]
+
+  @@map("subjects")
+}
+
+model Result {
+  id         String     @id @default(cuid())
+  studentId  String
+  student    Student    @relation(fields: [studentId], references: [id])
+  subjectId  String
+  subject    Subject    @relation(fields: [subjectId], references: [id])
+  examType   ExamType
+  session    String     // "2024-25"
+  marksObt   Float
+  maxMarks   Float
+  grade      String?
+  remarks    String?
+  createdAt  DateTime   @default(now())
+
+  @@unique([studentId, subjectId, examType, session])
+  @@map("results")
+}
+
+enum ExamType {
+  UNIT_TEST_1
+  UNIT_TEST_2
+  HALF_YEARLY
+  ANNUAL
+  QUARTERLY
+}
+
+// ─── Fee Management ────────────────────────────────────────────────────────────
+model Fee {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  amount      Float
+  month       String    // "April 2024"
+  dueDate     DateTime
+  paidDate    DateTime?
+  status      FeeStatus @default(PENDING)
+  receiptNo   String?   @unique
+  paymentMode String?
+  createdAt   DateTime  @default(now())
+
+  @@map("fees")
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+// ─── Teachers ──────────────────────────────────────────────────────────────────
+model Teacher {
+  id          String   @id @default(cuid())
+  name        String
+  designation String
+  subject     String
+  qualification String
+  experience  Int      // years
+  phone       String?
+  email       String?
+  photo       String?
+  isActive    Boolean  @default(true)
+  joinedAt    DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@map("teachers")
+}
+
+// ─── Communication ─────────────────────────────────────────────────────────────
+model Notice {
+  id          String       @id @default(cuid())
+  title       String
+  content     String
+  category    NoticeCategory @default(GENERAL)
+  isPublished Boolean      @default(false)
+  isPinned    Boolean      @default(false)
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("notices")
+}
+
+enum NoticeCategory {
+  GENERAL
+  EXAM
+  HOLIDAY
+  ADMISSION
+  RESULT
+  FEE
+  EVENT
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  endDate     DateTime?
+  location    String?
+  image       String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("events")
+}
+
+// ─── Admissions ────────────────────────────────────────────────────────────────
+model Admission {
+  id            String          @id @default(cuid())
+  studentName   String
+  fatherName    String
+  motherName    String
+  dob           DateTime
+  gender        Gender
+  applyingClass String
+  phone         String
+  email         String?
+  address       String
+  previousSchool String?
+  status        AdmissionStatus @default(PENDING)
+  remarks       String?
+  appliedAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@map("admissions")
+}
+
+enum AdmissionStatus {
+  PENDING
+  REVIEWING
+  APPROVED
+  REJECTED
+  ENROLLED
+}
+
+// ─── Gallery ───────────────────────────────────────────────────────────────────
+model Gallery {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  category    String   @default("General")
+  isPublished Boolean  @default(true)
+  takenAt     DateTime?
+  createdAt   DateTime @default(now())
+
+  @@map("gallery")
+}
+
+// ─── Contact ───────────────────────────────────────────────────────────────────
+model Contact {
+  id        String        @id @default(cuid())
+  name      String
+  mobile    String
+  email     String?
+  subject   String
+  message   String
+  status    ContactStatus @default(UNREAD)
+  createdAt DateTime      @default(now())
+
+  @@map("contacts")
+}
+
+enum ContactStatus {
+  UNREAD
+  READ
+  REPLIED
+}

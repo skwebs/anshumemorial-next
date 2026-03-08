@@ -1,0 +1,66 @@
+/* Google Fonts (must be first) */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Nunito:wght@300;400;500;600;700;800&display=swap");
+
+/* Tailwind */
+@import "tailwindcss";
+
+/* Tailwind source scanning */
+@source "../app/**/*.{js,ts,jsx,tsx}";
+@source "../components/**/*.{js,ts,jsx,tsx}";
+
+/* Theme variables */
+@theme {
+  --color-navy-50: #edf2fb;
+  --color-navy-100: #d1dff5;
+  --color-navy-500: #2563c7;
+  --color-navy-800: #0f2952;
+
+  --color-saffron-500: #f98607;
+
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Nunito", sans-serif;
+}
+
+/* Base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: white;
+    color: #1e293b;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+}
+
+/* Components */
+@layer components {
+  .btn-primary {
+    @apply bg-navy-800 text-white px-6 py-3 rounded-full font-semibold hover:bg-navy-500 transition;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md p-6;
+  }
+}
+
+/* Utilities */
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+}
